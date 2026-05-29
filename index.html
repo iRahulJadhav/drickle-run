@@ -70,7 +70,7 @@ const STATE = { MENU: 0, PLAYING: 1, GAMEOVER: 2 };
 let state = STATE.MENU;
 let score = 0;
 let hiScore = parseInt(localStorage.getItem('drickleHiScore') || '0');
-let gameSpeed = 4.5;
+let gameSpeed = 6;
 let frameCount = 0;
 let lives = 3;
 let invincibleTimer = 0;
@@ -137,7 +137,7 @@ let scorePopups = [];
 
 function resetGame() {
   score = 0;
-  gameSpeed = 4.5;
+  gameSpeed = 6;
   lives = 3;
   invincibleTimer = 0;
   cat.y = groundY - cat.h;
@@ -472,14 +472,6 @@ function drawHUD() {
     }
   }
 
-  if (frameCount > 0 && frameCount < 300) {
-    ctx.textAlign = 'center';
-    ctx.font = '9px "Press Start 2P", monospace';
-    ctx.fillStyle = '#ffd700';
-    ctx.globalAlpha = Math.max(0, 1 - frameCount / 300);
-    ctx.fillText('HOLD LONGER TO JUMP HIGHER', W / 2, H - 14);
-    ctx.globalAlpha = 1;
-  }
 }
 
 function drawMenu() {
