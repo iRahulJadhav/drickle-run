@@ -76,7 +76,7 @@ let lives = 3;
 let invincibleTimer = 0;
 
 // Background takes top ~65%, game area in the lower portion
-const groundY = Math.floor(H * 0.77);
+const groundY = Math.floor(H * 0.82);
 
 function loadImg(src) {
   const img = new Image();
@@ -346,14 +346,14 @@ function update() {
 
 // ─── DRAWING ───
 
+// Fixed height where background ends and table begins (independent of groundY)
+const bgEndY = Math.floor(H * 0.72);
+
 function drawBackground() {
   if (bgImg.complete) {
-    // Crop: left ~62% (removes people), bottom ~58% (cuts before bg's own counter/table)
     const cropW = bgImg.naturalWidth * 0.62;
     const cropH = bgImg.naturalHeight * 0.58;
-    // Draw bg to fill from top to where the table starts
-    const tableTop = groundY - 6;
-    ctx.drawImage(bgImg, 0, 0, cropW, cropH, 0, 0, W, tableTop);
+    ctx.drawImage(bgImg, 0, 0, cropW, cropH, 0, 0, W, bgEndY);
   } else {
     ctx.fillStyle = '#3a2010';
     ctx.fillRect(0, 0, W, H);
@@ -361,7 +361,7 @@ function drawBackground() {
 }
 
 function drawTable() {
-  const tableY = groundY - 6;
+  const tableY = bgEndY;
   const tableH = H - tableY;
 
   if (tableImg.complete) {
