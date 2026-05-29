@@ -2,28 +2,48 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Drickle Run</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Drickle Run — Café Cat Runner</title>
+
+<!-- Open Graph / Link Preview -->
+<meta property="og:title" content="Drickle Run — Café Cat Runner">
+<meta property="og:description" content="Help the café cat jump over Drickle coffee cups and collect croissants & cookies! A fun game to play while you wait for your coffee.">
+<meta property="og:image" content="https://irahuljadhav.github.io/drickle-run/Drickle%20Run%20banner.png">
+<meta property="og:image:width" content="1408">
+<meta property="og:image:height" content="768">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://irahuljadhav.github.io/drickle-run/">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Drickle Run — Café Cat Runner">
+<meta name="twitter:description" content="Help the café cat jump over Drickle coffee cups and collect treats!">
+<meta name="twitter:image" content="https://irahuljadhav.github.io/drickle-run/Drickle%20Run%20banner.png">
+
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
+  html, body {
     background: #1a0e08;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
     font-family: 'Press Start 2P', 'Courier New', monospace;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
   }
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
   #gameContainer {
     position: relative;
     width: 100vw;
-    max-width: 900px;
+    height: 100vw * 9 / 16;
+    max-width: min(900px, 100vw);
+    max-height: min(506px, 100vh);
     aspect-ratio: 16/9;
-    max-height: 100vh;
   }
   canvas {
     width: 100%;
@@ -78,12 +98,11 @@ let loadCount = 0;
   img.onload = () => { loadCount++; if (loadCount >= 6) allLoaded = true; };
 });
 
-// Bigger cat
 const cat = {
   x: 90,
   y: 0,
-  w: 90,
-  h: 78,
+  w: 110,
+  h: 95,
   vy: 0,
   jumping: false,
   frame: 0,
@@ -160,7 +179,6 @@ function releaseJump() {
   jumpHeld = false;
 }
 
-// Input — hold for higher jump
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' || e.code === 'ArrowUp') {
     e.preventDefault();
@@ -179,22 +197,18 @@ function spawnObstacle() {
   const rand = Math.random();
 
   if (rand < 0.25) {
-    // Tall cup
     const cupH = 72 + Math.random() * 10;
     obstacles.push({ x: W + 20, y: groundY - cupH, w: 42, h: cupH });
   } else if (rand < 0.5) {
-    // Double cups side by side
     const cupH1 = 55 + Math.random() * 10;
     const cupH2 = 55 + Math.random() * 10;
     const gap = 6;
     obstacles.push({ x: W + 20, y: groundY - cupH1, w: 38, h: cupH1 });
     obstacles.push({ x: W + 20 + 38 + gap, y: groundY - cupH2, w: 38, h: cupH2 });
   } else if (rand < 0.65) {
-    // Small cup
     const cupH = 42 + Math.random() * 8;
     obstacles.push({ x: W + 20, y: groundY - cupH, w: 34, h: cupH });
   } else {
-    // Normal cup
     const cupH = 55 + Math.random() * 10;
     obstacles.push({ x: W + 20, y: groundY - cupH, w: 38, h: cupH });
   }
@@ -202,13 +216,13 @@ function spawnObstacle() {
 
 function spawnCollectible() {
   const type = Math.random() < 0.5 ? 'croissant' : 'cookie';
-  const minY = groundY - 190;
-  const maxY = groundY - 110;
+  const minY = groundY - 200;
+  const maxY = groundY - 120;
   collectibles.push({
     x: W + 20,
     y: minY + Math.random() * (maxY - minY),
-    w: 34,
-    h: 34,
+    w: 38,
+    h: 38,
     type: type,
   });
 }
@@ -251,7 +265,6 @@ function update() {
 
   if (invincibleTimer > 0) invincibleTimer--;
 
-  // Hold jump — apply extra upward force while held
   if (jumpHeld && cat.jumping && jumpHoldCounter < JUMP_HOLD_TIME) {
     jumpHoldCounter++;
     const holdBoost = (JUMP_FORCE_MAX - JUMP_FORCE_MIN) / JUMP_HOLD_TIME;
@@ -365,7 +378,6 @@ function drawTable() {
   const tableH = H - tableY;
 
   if (tableImg.complete) {
-    // Tile the table image horizontally with scrolling
     const imgW = tableImg.naturalWidth;
     const imgH = tableImg.naturalHeight;
     const drawH = tableH;
@@ -377,7 +389,6 @@ function drawTable() {
       ctx.drawImage(tableImg, x, tableY, drawW, drawH);
     }
   } else {
-    // Fallback
     ctx.fillStyle = '#8a5d30';
     ctx.fillRect(0, tableY, W, tableH);
   }
@@ -444,13 +455,9 @@ function drawScorePopups() {
 }
 
 function drawHUD() {
-  // Semi-transparent header bar
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.fillRect(0, 0, W, 55);
 
-  // No title text — the background image already has "DRICKLE RUN"
-
-  // Score — top right
   ctx.textAlign = 'right';
   ctx.font = '13px "Press Start 2P", monospace';
   ctx.fillStyle = '#fff';
@@ -466,7 +473,6 @@ function drawHUD() {
   ctx.strokeText(hiStr, W - 15, 44);
   ctx.fillText(hiStr, W - 15, 44);
 
-  // Bottom bar
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.fillRect(0, H - 32, W, 32);
 
@@ -486,7 +492,6 @@ function drawHUD() {
     }
   }
 
-  // Hold hint on first few seconds
   if (frameCount > 0 && frameCount < 300) {
     ctx.textAlign = 'center';
     ctx.font = '8px "Press Start 2P", monospace';
@@ -507,20 +512,20 @@ function drawMenu() {
   ctx.font = 'bold 36px "Press Start 2P", monospace';
   ctx.lineWidth = 5;
   ctx.fillStyle = '#ffd700';
-  ctx.strokeText('DRICKLE RUN', W / 2, H / 2 - 70);
-  ctx.fillText('DRICKLE RUN', W / 2, H / 2 - 70);
+  ctx.strokeText('DRICKLE RUN', W / 2, H / 2 - 80);
+  ctx.fillText('DRICKLE RUN', W / 2, H / 2 - 80);
 
   ctx.font = '11px "Press Start 2P", monospace';
   ctx.lineWidth = 3;
   ctx.fillStyle = '#f0d0a0';
-  ctx.strokeText('A Drickle Coffee Shop Game', W / 2, H / 2 - 35);
-  ctx.fillText('A Drickle Coffee Shop Game', W / 2, H / 2 - 35);
+  ctx.strokeText('A Drickle Coffee Shop Game', W / 2, H / 2 - 48);
+  ctx.fillText('A Drickle Coffee Shop Game', W / 2, H / 2 - 48);
 
   if (catSheet.complete) {
     const sw = catSheet.width / 4;
     const sh = catSheet.height / 2;
     const menuFrame = Math.floor(Date.now() / 150) % 4;
-    ctx.drawImage(catSheet, sw * menuFrame, sh, sw, sh, W / 2 - 55, H / 2 - 15, 110, 90);
+    ctx.drawImage(catSheet, sw * menuFrame, sh, sw, sh, W / 2 - 55, H / 2 - 30, 110, 90);
   }
 
   const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
@@ -528,18 +533,25 @@ function drawMenu() {
   ctx.font = '15px "Press Start 2P", monospace';
   ctx.fillStyle = '#fff';
   ctx.lineWidth = 3;
-  ctx.strokeText('TAP TO START', W / 2, H / 2 + 100);
-  ctx.fillText('TAP TO START', W / 2, H / 2 + 100);
+  ctx.strokeText('TAP TO START', W / 2, H / 2 + 82);
+  ctx.fillText('TAP TO START', W / 2, H / 2 + 82);
   ctx.globalAlpha = 1;
+
+  // Long press instruction — clearly visible
+  ctx.font = '9px "Press Start 2P", monospace';
+  ctx.fillStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.strokeText('HOLD LONGER = JUMP HIGHER!', W / 2, H / 2 + 108);
+  ctx.fillText('HOLD LONGER = JUMP HIGHER!', W / 2, H / 2 + 108);
 
   ctx.font = '8px "Press Start 2P", monospace';
   ctx.fillStyle = '#bbb';
-  ctx.fillText('Jump over cups • Collect treats • Hold to jump higher', W / 2, H / 2 + 128);
+  ctx.fillText('Jump over cups • Collect croissants & cookies', W / 2, H / 2 + 130);
 
   if (hiScore > 0) {
     ctx.font = '10px "Press Start 2P", monospace';
     ctx.fillStyle = '#ffd700';
-    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, H / 2 + 152);
+    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, H / 2 + 155);
   }
 }
 
