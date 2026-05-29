@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Drickle Run</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a0e08;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #gameContainer {
+    position: relative;
+    width: 100vw;
+    max-width: 900px;
+    aspect-ratio: 16/9;
+    max-height: 100vh;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="gameContainer">
+  <canvas id="game"></canvas>
+</div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const W = 900;
+const H = 506;
+canvas.width = W;
+canvas.height = H;
+
+const STATE = { MENU: 0, PLAYING: 1, GAMEOVER: 2 };
+let state = STATE.MENU;
+let score = 0;
+let hiScore = parseInt(localStorage.getItem('drickleHiScore') || '0');
+let gameSpeed = 4.5;
+let frameCount = 0;
+let lives = 3;
+let invincibleTimer = 0;
+
+const groundY = Math.floor(H * 0.84);
+
+function loadImg(src) {
+  const img = new Image();
+  img.src = src;
+  return img;
+}
+
+const bgImg = loadImg('Drickle Run.png');
+const catSheet = loadImg('drickle run cat.png');
+const cupImg = loadImg('drickle run coffee cup png.png');
+const cookieImg = loadImg('drickle run cookie png.png');
+const croissantImg = loadImg('drickle run croissant png.png');
+const tableImg = loadImg('Drickle Run table.png');
+
+let allLoaded = false;
+let loadCount = 0;
+[bgImg, catSheet, cupImg, cookieImg, croissantImg, tableImg].forEach(img => {
+  img.onload = () => { loadCount++; if (loadCount >= 6) allLoaded = true; };
+});
+
+// Bigger cat
+const cat = {
+  x: 90,
+  y: 0,
+  w: 90,
+  h: 78,
+  vy: 0,
+  jumping: false,
+  frame: 0,
+  frameTimer: 0,
+  frameSpeed: 5,
+  runFrames: [
+    { row: 1, col: 0 },
+    { row: 1, col: 1 },
+    { row: 1, col: 2 },
+    { row: 1, col: 3 },
+  ],
+  jumpFrame: { row: 0, col: 0 },
+};
+cat.y = groundY - cat.h;
+
+const GRAVITY = 0.55;
+const JUMP_FORCE_MIN = -11;
+const JUMP_FORCE_MAX = -15;
+const JUMP_HOLD_TIME = 12;
+
+let jumpHeld = false;
+let jumpHoldCounter = 0;
+
+let obstacles = [];
+let nextObstacleIn = 100;
+
+let collectibles = [];
+let nextCollectibleIn = 60;
+
+let counterOffset = 0;
+let particles = [];
+let scorePopups = [];
+
+function resetGame() {
+  score = 0;
+  gameSpeed = 4.5;
+  lives = 3;
+  invincibleTimer = 0;
+  cat.y = groundY - cat.h;
+  cat.vy = 0;
+  cat.jumping = false;
+  cat.frame = 0;
+  jumpHeld = false;
+  jumpHoldCounter = 0;
+  obstacles = [];
+  collectibles = [];
+  particles = [];
+  scorePopups = [];
+  nextObstacleIn = 100;
+  nextCollectibleIn = 60;
+  frameCount = 0;
+  counterOffset = 0;
+}
+
+function startJump() {
+  if (state === STATE.MENU) {
+    state = STATE.PLAYING;
+    resetGame();
+    return;
+  }
+  if (state === STATE.GAMEOVER) {
+    state = STATE.MENU;
+    return;
+  }
+  if (!cat.jumping) {
+    cat.vy = JUMP_FORCE_MIN;
+    cat.jumping = true;
+    jumpHeld = true;
+    jumpHoldCounter = 0;
+  }
+}
+
+function releaseJump() {
+  jumpHeld = false;
+}
+
+// Input — hold for higher jump
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (!e.repeat) startJump();
+  }
+});
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') releaseJump();
+});
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startJump(); });
+canvas.addEventListener('touchend', (e) => { e.preventDefault(); releaseJump(); });
+canvas.addEventListener('mousedown', (e) => { e.preventDefault(); startJump(); });
+canvas.addEventListener('mouseup', (e) => { e.preventDefault(); releaseJump(); });
+
+function spawnObstacle() {
+  const rand = Math.random();
+
+  if (rand < 0.25) {
+    // Tall cup
+    const cupH = 72 + Math.random() * 10;
+    obstacles.push({ x: W + 20, y: groundY - cupH, w: 42, h: cupH });
+  } else if (rand < 0.5) {
+    // Double cups side by side
+    const cupH1 = 55 + Math.random() * 10;
+    const cupH2 = 55 + Math.random() * 10;
+    const gap = 6;
+    obstacles.push({ x: W + 20, y: groundY - cupH1, w: 38, h: cupH1 });
+    obstacles.push({ x: W + 20 + 38 + gap, y: groundY - cupH2, w: 38, h: cupH2 });
+  } else if (rand < 0.65) {
+    // Small cup
+    const cupH = 42 + Math.random() * 8;
+    obstacles.push({ x: W + 20, y: groundY - cupH, w: 34, h: cupH });
+  } else {
+    // Normal cup
+    const cupH = 55 + Math.random() * 10;
+    obstacles.push({ x: W + 20, y: groundY - cupH, w: 38, h: cupH });
+  }
+}
+
+function spawnCollectible() {
+  const type = Math.random() < 0.5 ? 'croissant' : 'cookie';
+  const minY = groundY - 190;
+  const maxY = groundY - 110;
+  collectibles.push({
+    x: W + 20,
+    y: minY + Math.random() * (maxY - minY),
+    w: 34,
+    h: 34,
+    type: type,
+  });
+}
+
+function hitTest(a, b, shrink) {
+  const s = shrink || 8;
+  return a.x + s < b.x + b.w - s &&
+         a.x + a.w - s > b.x + s &&
+         a.y + s < b.y + b.h - s &&
+         a.y + a.h - s > b.y + s;
+}
+
+function addParticles(x, y, color) {
+  for (let i = 0; i < 10; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 5,
+      vy: (Math.random() - 0.5) * 5 - 2,
+      life: 25,
+      color: color,
+      size: 2 + Math.random() * 4,
+    });
+  }
+}
+
+function addScorePopup(x, y, text) {
+  scorePopups.push({ x, y, text, life: 40, vy: -1.5 });
+}
+
+function update() {
+  if (state !== STATE.PLAYING) return;
+
+  frameCount++;
+
+  if (frameCount % 400 === 0 && gameSpeed < 11) {
+    gameSpeed += 0.25;
+  }
+
+  if (frameCount % 6 === 0) score++;
+
+  if (invincibleTimer > 0) invincibleTimer--;
+
+  // Hold jump — apply extra upward force while held
+  if (jumpHeld && cat.jumping && jumpHoldCounter < JUMP_HOLD_TIME) {
+    jumpHoldCounter++;
+    const holdBoost = (JUMP_FORCE_MAX - JUMP_FORCE_MIN) / JUMP_HOLD_TIME;
+    cat.vy += holdBoost;
+  }
+
+  cat.vy += GRAVITY;
+  cat.y += cat.vy;
+  if (cat.y >= groundY - cat.h) {
+    cat.y = groundY - cat.h;
+    cat.vy = 0;
+    cat.jumping = false;
+    jumpHeld = false;
+    jumpHoldCounter = 0;
+  }
+
+  cat.frameTimer++;
+  if (cat.frameTimer >= cat.frameSpeed) {
+    cat.frameTimer = 0;
+    cat.frame = (cat.frame + 1) % 4;
+  }
+
+  counterOffset = (counterOffset + gameSpeed) % 200;
+
+  nextObstacleIn -= gameSpeed / 4;
+  if (nextObstacleIn <= 0) {
+    spawnObstacle();
+    nextObstacleIn = (200 + Math.random() * 140) / (gameSpeed / 4);
+  }
+
+  nextCollectibleIn -= gameSpeed / 4;
+  if (nextCollectibleIn <= 0) {
+    spawnCollectible();
+    nextCollectibleIn = 50 + Math.random() * 80;
+  }
+
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    obstacles[i].x -= gameSpeed;
+    if (obstacles[i].x + obstacles[i].w < -20) {
+      obstacles.splice(i, 1);
+      continue;
+    }
+    if (invincibleTimer <= 0 && hitTest(cat, obstacles[i], 12)) {
+      lives--;
+      addParticles(cat.x + cat.w / 2, cat.y + cat.h / 2, '#ff6644');
+      if (lives <= 0) {
+        state = STATE.GAMEOVER;
+        if (score > hiScore) {
+          hiScore = score;
+          localStorage.setItem('drickleHiScore', hiScore.toString());
+        }
+      } else {
+        invincibleTimer = 90;
+        obstacles.splice(i, 1);
+      }
+    }
+  }
+
+  for (let i = collectibles.length - 1; i >= 0; i--) {
+    collectibles[i].x -= gameSpeed;
+    if (collectibles[i].x + collectibles[i].w < -20) {
+      collectibles.splice(i, 1);
+      continue;
+    }
+    if (hitTest(cat, collectibles[i], 2)) {
+      const pts = collectibles[i].type === 'croissant' ? 15 : 10;
+      score += pts;
+      const color = collectibles[i].type === 'croissant' ? '#f0a030' : '#c08040';
+      addParticles(collectibles[i].x + 16, collectibles[i].y + 16, color);
+      addScorePopup(collectibles[i].x, collectibles[i].y - 10, '+' + pts);
+      collectibles.splice(i, 1);
+    }
+  }
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].x += particles[i].vx;
+    particles[i].y += particles[i].vy;
+    particles[i].life--;
+    if (particles[i].life <= 0) particles.splice(i, 1);
+  }
+
+  for (let i = scorePopups.length - 1; i >= 0; i--) {
+    scorePopups[i].y += scorePopups[i].vy;
+    scorePopups[i].life--;
+    if (scorePopups[i].life <= 0) scorePopups.splice(i, 1);
+  }
+}
+
+// ─── DRAWING ───
+
+function drawBackground() {
+  if (bgImg.complete) {
+    const imgAspect = bgImg.naturalWidth / bgImg.naturalHeight;
+    const canvasAspect = W / H;
+    let sx = 0, sy = 0, sw = bgImg.naturalWidth, sh = bgImg.naturalHeight;
+    if (imgAspect > canvasAspect) {
+      sw = bgImg.naturalHeight * canvasAspect;
+      sx = (bgImg.naturalWidth - sw) / 2;
+    } else {
+      sh = bgImg.naturalWidth / canvasAspect;
+    }
+    ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, W, H);
+  } else {
+    ctx.fillStyle = '#3a2010';
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function drawTable() {
+  const tableY = groundY - 6;
+  const tableH = H - tableY;
+
+  if (tableImg.complete) {
+    // Tile the table image horizontally with scrolling
+    const imgW = tableImg.naturalWidth;
+    const imgH = tableImg.naturalHeight;
+    const drawH = tableH;
+    const scale = drawH / imgH;
+    const drawW = imgW * scale;
+    const offset = -(counterOffset % drawW);
+
+    for (let x = offset; x < W; x += drawW) {
+      ctx.drawImage(tableImg, x, tableY, drawW, drawH);
+    }
+  } else {
+    // Fallback
+    ctx.fillStyle = '#8a5d30';
+    ctx.fillRect(0, tableY, W, tableH);
+  }
+}
+
+function drawCat() {
+  if (invincibleTimer > 0 && Math.floor(invincibleTimer / 3) % 2 === 0) return;
+  if (!catSheet.complete) return;
+
+  const cols = 4, rows = 2;
+  const sw = catSheet.width / cols;
+  const sh = catSheet.height / rows;
+  const frameData = cat.jumping ? cat.jumpFrame : cat.runFrames[cat.frame];
+
+  ctx.drawImage(
+    catSheet,
+    frameData.col * sw, frameData.row * sh, sw, sh,
+    cat.x, cat.y, cat.w, cat.h
+  );
+}
+
+function drawObstacles() {
+  for (const obs of obstacles) {
+    if (!cupImg.complete) continue;
+    ctx.drawImage(cupImg, obs.x - 4, obs.y, obs.w + 8, obs.h);
+  }
+}
+
+function drawCollectibles() {
+  for (const col of collectibles) {
+    const img = col.type === 'croissant' ? croissantImg : cookieImg;
+    if (!img.complete) continue;
+    const floatY = Math.sin(frameCount * 0.08 + col.x * 0.01) * 4;
+    ctx.shadowColor = col.type === 'croissant' ? '#ffcc44' : '#ffaa33';
+    ctx.shadowBlur = 10;
+    ctx.drawImage(img, col.x, col.y + floatY, col.w, col.h);
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    ctx.globalAlpha = p.life / 25;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawScorePopups() {
+  for (const sp of scorePopups) {
+    ctx.globalAlpha = sp.life / 40;
+    ctx.font = 'bold 12px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffd700';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.textAlign = 'center';
+    ctx.strokeText(sp.text, sp.x, sp.y);
+    ctx.fillText(sp.text, sp.x, sp.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawHUD() {
+  // Semi-transparent header bar
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(0, 0, W, 55);
+
+  // No title text — the background image already has "DRICKLE RUN"
+
+  // Score — top right
+  ctx.textAlign = 'right';
+  ctx.font = '13px "Press Start 2P", monospace';
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  const scoreStr = 'SCORE: ' + String(score).padStart(5, '0');
+  ctx.strokeText(scoreStr, W - 15, 24);
+  ctx.fillText(scoreStr, W - 15, 24);
+
+  ctx.font = '10px "Press Start 2P", monospace';
+  ctx.fillStyle = '#ccc';
+  const hiStr = 'HI: ' + String(hiScore).padStart(5, '0');
+  ctx.strokeText(hiStr, W - 15, 44);
+  ctx.fillText(hiStr, W - 15, 44);
+
+  // Bottom bar
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(0, H - 32, W, 32);
+
+  ctx.font = '10px "Press Start 2P", monospace';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'left';
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.strokeText('LIVES:', 15, H - 11);
+  ctx.fillText('LIVES:', 15, H - 11);
+
+  if (catSheet.complete) {
+    const sw = catSheet.width / 4;
+    const sh = catSheet.height / 2;
+    for (let i = 0; i < lives; i++) {
+      ctx.drawImage(catSheet, sw * 2, 0, sw, sh, 90 + i * 28, H - 27, 24, 20);
+    }
+  }
+
+  // Hold hint on first few seconds
+  if (frameCount > 0 && frameCount < 300) {
+    ctx.textAlign = 'center';
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillStyle = '#aaa';
+    ctx.globalAlpha = Math.max(0, 1 - frameCount / 300);
+    ctx.fillText('HOLD LONGER TO JUMP HIGHER', W / 2, H - 11);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawMenu() {
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000';
+
+  ctx.font = 'bold 36px "Press Start 2P", monospace';
+  ctx.lineWidth = 5;
+  ctx.fillStyle = '#ffd700';
+  ctx.strokeText('DRICKLE RUN', W / 2, H / 2 - 70);
+  ctx.fillText('DRICKLE RUN', W / 2, H / 2 - 70);
+
+  ctx.font = '11px "Press Start 2P", monospace';
+  ctx.lineWidth = 3;
+  ctx.fillStyle = '#f0d0a0';
+  ctx.strokeText('A Drickle Coffee Shop Game', W / 2, H / 2 - 35);
+  ctx.fillText('A Drickle Coffee Shop Game', W / 2, H / 2 - 35);
+
+  if (catSheet.complete) {
+    const sw = catSheet.width / 4;
+    const sh = catSheet.height / 2;
+    const menuFrame = Math.floor(Date.now() / 150) % 4;
+    ctx.drawImage(catSheet, sw * menuFrame, sh, sw, sh, W / 2 - 55, H / 2 - 15, 110, 90);
+  }
+
+  const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
+  ctx.globalAlpha = pulse;
+  ctx.font = '15px "Press Start 2P", monospace';
+  ctx.fillStyle = '#fff';
+  ctx.lineWidth = 3;
+  ctx.strokeText('TAP TO START', W / 2, H / 2 + 100);
+  ctx.fillText('TAP TO START', W / 2, H / 2 + 100);
+  ctx.globalAlpha = 1;
+
+  ctx.font = '8px "Press Start 2P", monospace';
+  ctx.fillStyle = '#bbb';
+  ctx.fillText('Jump over cups • Collect treats • Hold to jump higher', W / 2, H / 2 + 128);
+
+  if (hiScore > 0) {
+    ctx.font = '10px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, H / 2 + 152);
+  }
+}
+
+function drawGameOver() {
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 4;
+
+  ctx.font = 'bold 30px "Press Start 2P", monospace';
+  ctx.fillStyle = '#ff4444';
+  ctx.strokeText('GAME OVER', W / 2, H / 2 - 50);
+  ctx.fillText('GAME OVER', W / 2, H / 2 - 50);
+
+  ctx.font = '16px "Press Start 2P", monospace';
+  ctx.fillStyle = '#ffd700';
+  ctx.strokeText('SCORE: ' + String(score).padStart(5, '0'), W / 2, H / 2);
+  ctx.fillText('SCORE: ' + String(score).padStart(5, '0'), W / 2, H / 2);
+
+  if (score >= hiScore && score > 0) {
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.fillStyle = '#44ff44';
+    ctx.strokeText('NEW HI-SCORE!', W / 2, H / 2 + 30);
+    ctx.fillText('NEW HI-SCORE!', W / 2, H / 2 + 30);
+  }
+
+  const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
+  ctx.globalAlpha = pulse;
+  ctx.font = '12px "Press Start 2P", monospace';
+  ctx.fillStyle = '#fff';
+  ctx.strokeText('TAP TO CONTINUE', W / 2, H / 2 + 70);
+  ctx.fillText('TAP TO CONTINUE', W / 2, H / 2 + 70);
+  ctx.globalAlpha = 1;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+  drawTable();
+  drawObstacles();
+  drawCollectibles();
+  drawCat();
+  drawParticles();
+  drawScorePopups();
+  drawHUD();
+  if (state === STATE.MENU) drawMenu();
+  if (state === STATE.GAMEOVER) drawGameOver();
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
