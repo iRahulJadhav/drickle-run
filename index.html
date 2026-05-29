@@ -339,13 +339,12 @@ function update() {
 
 function drawBackground() {
   if (bgImg.complete) {
-    // Crop: use left ~60% of the image (removes people on right), fill canvas width
+    // Crop: left ~62% (removes people), bottom ~58% (cuts before bg's own counter/table)
     const cropW = bgImg.naturalWidth * 0.62;
-    const cropH = bgImg.naturalHeight;
-    // Draw to fill the area above the table
-    const drawH = groundY + 10;
-    const drawW = W;
-    ctx.drawImage(bgImg, 0, 0, cropW, cropH, 0, 0, drawW, drawH);
+    const cropH = bgImg.naturalHeight * 0.58;
+    // Draw bg to fill from top to where the table starts
+    const tableTop = groundY - 6;
+    ctx.drawImage(bgImg, 0, 0, cropW, cropH, 0, 0, W, tableTop);
   } else {
     ctx.fillStyle = '#3a2010';
     ctx.fillRect(0, 0, W, H);
