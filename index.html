@@ -76,7 +76,7 @@ let lives = 3;
 let invincibleTimer = 0;
 
 // Background takes top ~65%, game area in the lower portion
-const groundY = Math.floor(H * 0.73);
+const groundY = Math.floor(H * 0.77);
 
 function loadImg(src) {
   const img = new Image();
@@ -100,8 +100,8 @@ let loadCount = 0;
 const cat = {
   x: 60,
   y: 0,
-  w: 120,
-  h: 104,
+  w: 100,
+  h: 110,
   vy: 0,
   jumping: false,
   frame: 0,
@@ -195,19 +195,28 @@ canvas.addEventListener('mouseup', (e) => { e.preventDefault(); releaseJump(); }
 function spawnObstacle() {
   const rand = Math.random();
   if (rand < 0.25) {
-    const cupH = 80 + Math.random() * 12;
-    obstacles.push({ x: W + 20, y: groundY - cupH, w: 50, h: cupH });
+    // Tall cup
+    const cupH = 85 + Math.random() * 12;
+    const cupW = Math.floor(cupH * 0.7);
+    obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
   } else if (rand < 0.5) {
-    const cupH1 = 62 + Math.random() * 10;
-    const cupH2 = 62 + Math.random() * 10;
-    obstacles.push({ x: W + 20, y: groundY - cupH1, w: 46, h: cupH1 });
-    obstacles.push({ x: W + 20 + 52, y: groundY - cupH2, w: 46, h: cupH2 });
+    // Double cups
+    const cupH1 = 65 + Math.random() * 10;
+    const cupW1 = Math.floor(cupH1 * 0.7);
+    const cupH2 = 65 + Math.random() * 10;
+    const cupW2 = Math.floor(cupH2 * 0.7);
+    obstacles.push({ x: W + 20, y: groundY - cupH1, w: cupW1, h: cupH1 });
+    obstacles.push({ x: W + 20 + cupW1 + 8, y: groundY - cupH2, w: cupW2, h: cupH2 });
   } else if (rand < 0.65) {
-    const cupH = 50 + Math.random() * 8;
-    obstacles.push({ x: W + 20, y: groundY - cupH, w: 42, h: cupH });
+    // Small cup
+    const cupH = 52 + Math.random() * 8;
+    const cupW = Math.floor(cupH * 0.7);
+    obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
   } else {
-    const cupH = 62 + Math.random() * 10;
-    obstacles.push({ x: W + 20, y: groundY - cupH, w: 46, h: cupH });
+    // Normal cup
+    const cupH = 65 + Math.random() * 10;
+    const cupW = Math.floor(cupH * 0.7);
+    obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
   }
 }
 
@@ -385,7 +394,7 @@ function drawCat() {
 function drawObstacles() {
   for (const obs of obstacles) {
     if (!cupImg.complete) continue;
-    ctx.drawImage(cupImg, obs.x - 4, obs.y, obs.w + 8, obs.h);
+    ctx.drawImage(cupImg, obs.x, obs.y, obs.w, obs.h);
   }
 }
 
