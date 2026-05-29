@@ -351,9 +351,26 @@ const bgEndY = Math.floor(H * 0.72);
 
 function drawBackground() {
   if (bgImg.complete) {
-    const cropW = bgImg.naturalWidth * 0.62;
-    const cropH = bgImg.naturalHeight * 0.58;
-    ctx.drawImage(bgImg, 0, 0, cropW, cropH, 0, 0, W, bgEndY);
+    // We want to fill canvas width (W) and go down to bgEndY without stretching.
+    // Calculate how much of the source image to use: fill W, maintain aspect ratio,
+    // then crop from the top-left of the source.
+    const targetW = W;
+    const targetH = bgEndY;
+    const targetAspect = targetW / targetH;
+    const imgAspect = bgImg.naturalWidth / bgImg.naturalHeight;
+
+    let sx = 0, sy = 0, sw, sh;
+    // Use top 70% of image height (cuts before the counter/table in the bg)
+    const maxSrcH = bgImg.naturalHeight * 0.70;
+    if (imgAspect > targetAspect) {
+      sh = maxSrcH;
+      sw = sh * targetAspect;
+      sx = 0;
+    } else {
+      sw = bgImg.naturalWidth;
+      sh = Math.min(sw / targetAspect, maxSrcH);
+    }
+    ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, targetW, targetH);
   } else {
     ctx.fillStyle = '#3a2010';
     ctx.fillRect(0, 0, W, H);
