@@ -7,7 +7,7 @@
 
 <!-- Open Graph / Link Preview -->
 <meta property="og:title" content="Drickle Run — Café Cat Runner">
-<meta property="og:description" content="Help the café cat jump over Drickle coffee cups and collect croissants & cookies! A fun game to play while you wait for your coffee.">
+<meta property="og:description" content="Help the café cat jump over Drickle coffee cups and collect croissants & burgers! A fun game to play while you wait for your coffee.">
 <meta property="og:image" content="https://irahuljadhav.github.io/drickle-run/Drickle%20Run%20banner.png">
 <meta property="og:image:width" content="1408">
 <meta property="og:image:height" content="768">
@@ -21,7 +21,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
-    background: #1a0e08;
+    background: #f5c6d0;
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -41,13 +41,12 @@
     max-width: 700px;
     aspect-ratio: 3/4;
     max-height: 100vh;
+    margin: auto;
   }
   canvas {
     width: 100%;
     height: 100%;
     display: block;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
   }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -60,7 +59,6 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-// 3:4 portrait canvas — fills phone screens nicely
 const W = 600;
 const H = 800;
 canvas.width = W;
@@ -75,8 +73,14 @@ let frameCount = 0;
 let lives = 3;
 let invincibleTimer = 0;
 
-// Background takes top ~65%, game area in the lower portion
-const groundY = Math.floor(H * 0.82);
+// Show FULL background at correct aspect ratio (no cropping).
+// bg is ~1.83:1 ratio, so at W=600 it'll be ~328px tall.
+// The table strip overlays the bg's own counter at the bottom of the bg.
+const tableStripH = 65;
+// groundY is where the cat stands — on the table surface
+// These get calculated after bg loads, but set defaults:
+let bgDrawH = Math.floor(W / 1.83);
+let groundY = bgDrawH - 30;
 
 function loadImg(src) {
   const img = new Image();
@@ -84,16 +88,16 @@ function loadImg(src) {
   return img;
 }
 
-const bgImg = loadImg('Drickle Run.png');
+const bgImg = loadImg('Drickle Cafe Background.png');
 const catSheet = loadImg('drickle run cat.png');
-const cupImg = loadImg('drickle run coffee cup png.png');
-const cookieImg = loadImg('drickle run cookie png.png');
-const croissantImg = loadImg('drickle run croissant png.png');
-const tableImg = loadImg('Drickle Run table.png');
+const cupImg = loadImg('Drickle Run Coffee Glass.png');
+const burgerImg = loadImg('Drickle Run Burger.png');
+const croissantImg = loadImg('Drickle Run Croissant.png');
+const tableImg = loadImg('Drickle Run Table.png');
 
 let allLoaded = false;
 let loadCount = 0;
-[bgImg, catSheet, cupImg, cookieImg, croissantImg, tableImg].forEach(img => {
+[bgImg, catSheet, cupImg, burgerImg, croissantImg, tableImg].forEach(img => {
   img.onload = () => { loadCount++; if (loadCount >= 6) allLoaded = true; };
 });
 
@@ -140,6 +144,7 @@ function resetGame() {
   gameSpeed = 6;
   lives = 3;
   invincibleTimer = 0;
+  initGroundY();
   cat.y = groundY - cat.h;
   cat.vy = 0;
   cat.jumping = false;
@@ -194,41 +199,41 @@ canvas.addEventListener('mouseup', (e) => { e.preventDefault(); releaseJump(); }
 
 function spawnObstacle() {
   const rand = Math.random();
+  // Cup aspect ratio ~0.76 (width/height) based on new coffee glass image
   if (rand < 0.25) {
-    // Tall cup
     const cupH = 85 + Math.random() * 12;
-    const cupW = Math.floor(cupH * 0.7);
+    const cupW = Math.floor(cupH * 0.76);
     obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
   } else if (rand < 0.5) {
-    // Double cups
     const cupH1 = 65 + Math.random() * 10;
-    const cupW1 = Math.floor(cupH1 * 0.7);
+    const cupW1 = Math.floor(cupH1 * 0.76);
     const cupH2 = 65 + Math.random() * 10;
-    const cupW2 = Math.floor(cupH2 * 0.7);
+    const cupW2 = Math.floor(cupH2 * 0.76);
     obstacles.push({ x: W + 20, y: groundY - cupH1, w: cupW1, h: cupH1 });
     obstacles.push({ x: W + 20 + cupW1 + 8, y: groundY - cupH2, w: cupW2, h: cupH2 });
   } else if (rand < 0.65) {
-    // Small cup
     const cupH = 52 + Math.random() * 8;
-    const cupW = Math.floor(cupH * 0.7);
+    const cupW = Math.floor(cupH * 0.76);
     obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
   } else {
-    // Normal cup
     const cupH = 65 + Math.random() * 10;
-    const cupW = Math.floor(cupH * 0.7);
+    const cupW = Math.floor(cupH * 0.76);
     obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
   }
 }
 
 function spawnCollectible() {
-  const type = Math.random() < 0.5 ? 'croissant' : 'cookie';
+  const type = Math.random() < 0.5 ? 'croissant' : 'burger';
   const minY = groundY - 220;
   const maxY = groundY - 140;
+  // Croissant is wider than tall, burger is roughly square
+  const w = type === 'croissant' ? 55 : 48;
+  const h = type === 'croissant' ? 35 : 42;
   collectibles.push({
     x: W + 20,
     y: minY + Math.random() * (maxY - minY),
-    w: 44,
-    h: 44,
+    w: w,
+    h: h,
     type: type,
   });
 }
@@ -324,7 +329,7 @@ function update() {
     if (hitTest(cat, collectibles[i], 2)) {
       const pts = collectibles[i].type === 'croissant' ? 15 : 10;
       score += pts;
-      addParticles(collectibles[i].x + 20, collectibles[i].y + 20, collectibles[i].type === 'croissant' ? '#f0a030' : '#c08040');
+      addParticles(collectibles[i].x + 20, collectibles[i].y + 20, collectibles[i].type === 'croissant' ? '#c08040' : '#f0a030');
       addScorePopup(collectibles[i].x, collectibles[i].y - 10, '+' + pts);
       collectibles.splice(i, 1);
     }
@@ -346,53 +351,45 @@ function update() {
 
 // ─── DRAWING ───
 
-// Fixed height where background ends and table begins (independent of groundY)
-const bgEndY = Math.floor(H * 0.67);
+function initGroundY() {
+  if (bgImg.complete && !groundInitialized) {
+    bgDrawH = Math.floor(W * bgImg.naturalHeight / bgImg.naturalWidth);
+    groundY = bgDrawH - 30;
+    cat.y = groundY - cat.h;
+    groundInitialized = true;
+  }
+}
+let groundInitialized = false;
 
 function drawBackground() {
   if (bgImg.complete) {
-    // We want to fill canvas width (W) and go down to bgEndY without stretching.
-    // Calculate how much of the source image to use: fill W, maintain aspect ratio,
-    // then crop from the top-left of the source.
-    const targetW = W;
-    const targetH = bgEndY;
-    const targetAspect = targetW / targetH;
-    const imgAspect = bgImg.naturalWidth / bgImg.naturalHeight;
-
-    let sx = 0, sy = 0, sw, sh;
-    // Use top 70% of image height (cuts before the counter/table in the bg)
-    const maxSrcH = bgImg.naturalHeight * 0.70;
-    if (imgAspect > targetAspect) {
-      sh = maxSrcH;
-      sw = sh * targetAspect;
-      sx = 0;
-    } else {
-      sw = bgImg.naturalWidth;
-      sh = Math.min(sw / targetAspect, maxSrcH);
-    }
-    ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, targetW, targetH);
+    initGroundY();
+    ctx.drawImage(bgImg, 0, 0, bgImg.naturalWidth, bgImg.naturalHeight, 0, 0, W, bgDrawH);
   } else {
-    ctx.fillStyle = '#3a2010';
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ffe14d';
+    ctx.fillRect(0, 0, W, bgDrawH);
   }
+  // Fill below background with yellow (cafe counter front)
+  ctx.fillStyle = '#ffe14d';
+  ctx.fillRect(0, bgDrawH, W, H - bgDrawH);
 }
 
 function drawTable() {
-  const tableY = bgEndY;
-  const tableH = H - tableY;
+  // Place table strip right over the bg's counter (bottom ~15% of bg image)
+  const tableY = bgDrawH - tableStripH + 5;
 
   if (tableImg.complete) {
     const imgW = tableImg.naturalWidth;
     const imgH = tableImg.naturalHeight;
-    const scale = tableH / imgH;
+    const scale = tableStripH / imgH;
     const drawW = imgW * scale;
     const offset = -(counterOffset % drawW);
     for (let x = offset; x < W; x += drawW) {
-      ctx.drawImage(tableImg, x, tableY, drawW, tableH);
+      ctx.drawImage(tableImg, x, tableY, drawW, tableStripH);
     }
   } else {
-    ctx.fillStyle = '#8a5d30';
-    ctx.fillRect(0, tableY, W, tableH);
+    ctx.fillStyle = '#f5f0e8';
+    ctx.fillRect(0, tableY, W, tableStripH);
   }
 }
 
@@ -417,13 +414,10 @@ function drawObstacles() {
 
 function drawCollectibles() {
   for (const col of collectibles) {
-    const img = col.type === 'croissant' ? croissantImg : cookieImg;
+    const img = col.type === 'croissant' ? croissantImg : burgerImg;
     if (!img.complete) continue;
     const floatY = Math.sin(frameCount * 0.08 + col.x * 0.01) * 4;
-    ctx.shadowColor = col.type === 'croissant' ? '#ffcc44' : '#ffaa33';
-    ctx.shadowBlur = 12;
     ctx.drawImage(img, col.x, col.y + floatY, col.w, col.h);
-    ctx.shadowBlur = 0;
   }
 }
 
@@ -469,7 +463,6 @@ function drawHUD() {
   ctx.strokeText('HI: ' + String(hiScore).padStart(5, '0'), W - 15, 50);
   ctx.fillText('HI: ' + String(hiScore).padStart(5, '0'), W - 15, 50);
 
-  // Bottom bar
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(0, H - 40, W, 40);
 
@@ -488,7 +481,6 @@ function drawHUD() {
       ctx.drawImage(catSheet, sw * 2, 0, sw, sh, 110 + i * 34, H - 32, 28, 24);
     }
   }
-
 }
 
 function drawMenu() {
@@ -541,7 +533,7 @@ function drawMenu() {
   ctx.font = '9px "Press Start 2P", monospace';
   ctx.fillStyle = '#bbb';
   ctx.fillText('Jump over cups', W / 2, cy + 235);
-  ctx.fillText('Collect croissants & cookies', W / 2, cy + 255);
+  ctx.fillText('Collect croissants & burgers', W / 2, cy + 255);
 
   if (hiScore > 0) {
     ctx.font = '12px "Press Start 2P", monospace';
