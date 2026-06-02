@@ -202,22 +202,22 @@ function spawnObstacle() {
   if (rand < 0.25) {
     const cupH = 85 + Math.random() * 12;
     const cupW = Math.floor(cupH * 0.76);
-    obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
+    obstacles.push({ x: W + 20, y: groundY - cupH - 15, w: cupW, h: cupH });
   } else if (rand < 0.5) {
     const cupH1 = 65 + Math.random() * 10;
     const cupW1 = Math.floor(cupH1 * 0.76);
     const cupH2 = 65 + Math.random() * 10;
     const cupW2 = Math.floor(cupH2 * 0.76);
-    obstacles.push({ x: W + 20, y: groundY - cupH1, w: cupW1, h: cupH1 });
-    obstacles.push({ x: W + 20 + cupW1 + 8, y: groundY - cupH2, w: cupW2, h: cupH2 });
+    obstacles.push({ x: W + 20, y: groundY - cupH1 - 15, w: cupW1, h: cupH1 });
+    obstacles.push({ x: W + 20 + cupW1 + 8, y: groundY - cupH2 - 15, w: cupW2, h: cupH2 });
   } else if (rand < 0.65) {
     const cupH = 52 + Math.random() * 8;
     const cupW = Math.floor(cupH * 0.76);
-    obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
+    obstacles.push({ x: W + 20, y: groundY - cupH - 15, w: cupW, h: cupH });
   } else {
     const cupH = 65 + Math.random() * 10;
     const cupW = Math.floor(cupH * 0.76);
-    obstacles.push({ x: W + 20, y: groundY - cupH, w: cupW, h: cupH });
+    obstacles.push({ x: W + 20, y: groundY - cupH - 15, w: cupW, h: cupH });
   }
 }
 
