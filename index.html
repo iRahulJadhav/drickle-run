@@ -462,22 +462,24 @@ function drawHUD() {
   ctx.strokeText('HI: ' + String(hiScore).padStart(5, '0'), W - 15, 50);
   ctx.fillText('HI: ' + String(hiScore).padStart(5, '0'), W - 15, 50);
 
+  // Lives bar — just below the table strip
+  const livesBarY = bgDrawH - 10 + tableStripH - 45;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(0, H - 40, W, 40);
+  ctx.fillRect(0, livesBarY, W, 36);
 
   ctx.font = '12px "Press Start 2P", monospace';
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'left';
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 2;
-  ctx.strokeText('LIVES:', 15, H - 14);
-  ctx.fillText('LIVES:', 15, H - 14);
+  ctx.strokeText('LIVES:', 15, livesBarY + 24);
+  ctx.fillText('LIVES:', 15, livesBarY + 24);
 
   if (catSheet.complete) {
     const sw = catSheet.width / 4;
     const sh = catSheet.height / 2;
     for (let i = 0; i < lives; i++) {
-      ctx.drawImage(catSheet, sw * 2, 0, sw, sh, 110 + i * 34, H - 32, 28, 24);
+      ctx.drawImage(catSheet, sw * 2, 0, sw, sh, 110 + i * 34, livesBarY + 6, 28, 24);
     }
   }
 }
@@ -489,55 +491,58 @@ function drawMenu() {
   ctx.textAlign = 'center';
   ctx.strokeStyle = '#000';
 
-  const cy = H * 0.42;
+  const cy = H * 0.38;
 
-  ctx.font = 'bold 30px "Press Start 2P", monospace';
-  ctx.lineWidth = 5;
+  ctx.font = 'bold 44px "Press Start 2P", monospace';
+  ctx.lineWidth = 6;
   ctx.fillStyle = '#ffd700';
-  ctx.strokeText('DRICKLE', W / 2, cy - 70);
-  ctx.fillText('DRICKLE', W / 2, cy - 70);
-  ctx.strokeText('RUN', W / 2, cy - 30);
-  ctx.fillText('RUN', W / 2, cy - 30);
+  ctx.strokeText('DRICKLE', W / 2, cy - 80);
+  ctx.fillText('DRICKLE', W / 2, cy - 80);
+  ctx.strokeText('RUN', W / 2, cy - 28);
+  ctx.fillText('RUN', W / 2, cy - 28);
 
-  ctx.font = '10px "Press Start 2P", monospace';
+  ctx.font = '15px "Press Start 2P", monospace';
   ctx.lineWidth = 3;
   ctx.fillStyle = '#f0d0a0';
-  ctx.strokeText('A Drickle Coffee Shop Game', W / 2, cy + 2);
-  ctx.fillText('A Drickle Coffee Shop Game', W / 2, cy + 2);
+  ctx.strokeText('A Drickle Coffee', W / 2, cy + 10);
+  ctx.fillText('A Drickle Coffee', W / 2, cy + 10);
+  ctx.strokeText('Shop Game', W / 2, cy + 32);
+  ctx.fillText('Shop Game', W / 2, cy + 32);
 
   if (catSheet.complete) {
     const sw = catSheet.width / 4;
     const sh = catSheet.height / 2;
     const menuFrame = Math.floor(Date.now() / 150) % 4;
-    ctx.drawImage(catSheet, sw * menuFrame, sh, sw, sh, W / 2 - 60, cy + 20, 120, 100);
+    ctx.drawImage(catSheet, sw * menuFrame, sh, sw, sh, W / 2 - 70, cy + 50, 140, 115);
   }
 
   const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
   ctx.globalAlpha = pulse;
-  ctx.font = '16px "Press Start 2P", monospace';
+  ctx.font = '22px "Press Start 2P", monospace';
   ctx.fillStyle = '#fff';
-  ctx.lineWidth = 3;
-  ctx.strokeText('TAP TO START', W / 2, cy + 150);
-  ctx.fillText('TAP TO START', W / 2, cy + 150);
+  ctx.lineWidth = 4;
+  ctx.strokeText('TAP TO START', W / 2, cy + 200);
+  ctx.fillText('TAP TO START', W / 2, cy + 200);
   ctx.globalAlpha = 1;
 
-  ctx.font = '11px "Press Start 2P", monospace';
+  ctx.font = '14px "Press Start 2P", monospace';
   ctx.fillStyle = '#ffd700';
-  ctx.lineWidth = 2;
-  ctx.strokeText('HOLD LONGER =', W / 2, cy + 185);
-  ctx.fillText('HOLD LONGER =', W / 2, cy + 185);
-  ctx.strokeText('JUMP HIGHER!', W / 2, cy + 205);
-  ctx.fillText('JUMP HIGHER!', W / 2, cy + 205);
+  ctx.lineWidth = 3;
+  ctx.strokeText('HOLD LONGER =', W / 2, cy + 240);
+  ctx.fillText('HOLD LONGER =', W / 2, cy + 240);
+  ctx.strokeText('JUMP HIGHER!', W / 2, cy + 262);
+  ctx.fillText('JUMP HIGHER!', W / 2, cy + 262);
 
-  ctx.font = '9px "Press Start 2P", monospace';
+  ctx.font = '12px "Press Start 2P", monospace';
   ctx.fillStyle = '#bbb';
-  ctx.fillText('Jump over cups', W / 2, cy + 235);
-  ctx.fillText('Collect croissants & burgers', W / 2, cy + 255);
+  ctx.fillText('Jump over cups', W / 2, cy + 295);
+  ctx.fillText('Collect croissants', W / 2, cy + 315);
+  ctx.fillText('& burgers', W / 2, cy + 335);
 
   if (hiScore > 0) {
-    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.font = '15px "Press Start 2P", monospace';
     ctx.fillStyle = '#ffd700';
-    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, cy + 290);
+    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, cy + 375);
   }
 }
 
@@ -593,6 +598,8 @@ function draw() {
 function gameLoop() {
   update();
   draw();
+  // Match page background to overlay state
+  document.body.style.background = (state === STATE.PLAYING) ? '#ffe14d' : '#6b5a1e';
   requestAnimationFrame(gameLoop);
 }
 
