@@ -39,7 +39,7 @@
     position: relative;
     width: 100vw;
     max-width: 700px;
-    aspect-ratio: 3/4;
+    aspect-ratio: 1/1;
     max-height: 100vh;
   }
   canvas {
@@ -59,7 +59,7 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
 const W = 600;
-const H = 800;
+const H = 600;
 canvas.width = W;
 canvas.height = H;
 
@@ -75,11 +75,11 @@ let invincibleTimer = 0;
 // Show FULL background at correct aspect ratio (no cropping).
 // bg is ~1.83:1 ratio, so at W=600 it'll be ~328px tall.
 // The table strip overlays the bg's own counter at the bottom of the bg.
-const tableStripH = 65;
-// groundY is where the cat stands — on the table surface
-// These get calculated after bg loads, but set defaults:
-let bgDrawH = Math.floor(W / 1.83);
-let groundY = bgDrawH - 30;
+const tableStripH = 55;
+// Table overlays bg counter at ~72% of canvas height
+const tableTopY = Math.floor(H * 0.72);
+// Cat stands on the table surface
+let groundY = tableTopY + 10;
 
 function loadImg(src) {
   const img = new Image();
@@ -87,7 +87,7 @@ function loadImg(src) {
   return img;
 }
 
-const bgImg = loadImg('Drickle Cafe Background.png');
+const bgImg = loadImg('Drickle Run Cafe Square Background.png');
 const catSheet = loadImg('drickle run cat.png');
 const cupImg = loadImg('Drickle Run Coffee Glass.png');
 const burgerImg = loadImg('Drickle Run Burger.png');
@@ -143,7 +143,6 @@ function resetGame() {
   gameSpeed = 6;
   lives = 3;
   invincibleTimer = 0;
-  initGroundY();
   cat.y = groundY - cat.h;
   cat.vy = 0;
   cat.jumping = false;
@@ -350,32 +349,19 @@ function update() {
 
 // ─── DRAWING ───
 
-function initGroundY() {
-  if (bgImg.complete && !groundInitialized) {
-    bgDrawH = Math.floor(W * bgImg.naturalHeight / bgImg.naturalWidth);
-    groundY = bgDrawH - 30;
-    cat.y = groundY - cat.h;
-    groundInitialized = true;
-  }
-}
-let groundInitialized = false;
-
 function drawBackground() {
   if (bgImg.complete) {
-    initGroundY();
-    ctx.drawImage(bgImg, 0, 0, bgImg.naturalWidth, bgImg.naturalHeight, 0, 0, W, bgDrawH);
+    // Draw full square image to fill full square canvas — no cropping
+    ctx.drawImage(bgImg, 0, 0, bgImg.naturalWidth, bgImg.naturalHeight, 0, 0, W, H);
   } else {
     ctx.fillStyle = '#ffe14d';
-    ctx.fillRect(0, 0, W, bgDrawH);
+    ctx.fillRect(0, 0, W, H);
   }
-  // Fill below background with yellow (cafe counter front)
-  ctx.fillStyle = '#ffe14d';
-  ctx.fillRect(0, bgDrawH, W, H - bgDrawH);
 }
 
 function drawTable() {
   // Place table strip right over the bg's counter (bottom ~15% of bg image)
-  const tableY = bgDrawH - tableStripH + 5;
+  const tableY = tableTopY;
 
   if (tableImg.complete) {
     const imgW = tableImg.naturalWidth;
@@ -463,7 +449,7 @@ function drawHUD() {
   ctx.fillText('HI: ' + String(hiScore).padStart(5, '0'), W - 15, 50);
 
   // Lives bar — just below the table strip
-  const livesBarY = bgDrawH - 10 + tableStripH - 45;
+  const livesBarY = tableTopY + tableStripH - 2;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(0, livesBarY, W, 36);
 
