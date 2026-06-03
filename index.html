@@ -511,24 +511,24 @@ function drawMenu() {
   ctx.fillText('TAP TO START', W / 2, cy + 200);
   ctx.globalAlpha = 1;
 
-  ctx.font = '14px "Press Start 2P", monospace';
+  ctx.font = '18px "Press Start 2P", monospace';
   ctx.fillStyle = '#ffd700';
   ctx.lineWidth = 3;
   ctx.strokeText('HOLD LONGER =', W / 2, cy + 240);
   ctx.fillText('HOLD LONGER =', W / 2, cy + 240);
-  ctx.strokeText('JUMP HIGHER!', W / 2, cy + 262);
-  ctx.fillText('JUMP HIGHER!', W / 2, cy + 262);
+  ctx.strokeText('JUMP HIGHER!', W / 2, cy + 265);
+  ctx.fillText('JUMP HIGHER!', W / 2, cy + 265);
 
-  ctx.font = '12px "Press Start 2P", monospace';
+  ctx.font = '15px "Press Start 2P", monospace';
   ctx.fillStyle = '#bbb';
-  ctx.fillText('Jump over cups', W / 2, cy + 295);
-  ctx.fillText('Collect croissants', W / 2, cy + 315);
-  ctx.fillText('& burgers', W / 2, cy + 335);
+  ctx.fillText('Jump over cups', W / 2, cy + 300);
+  ctx.fillText('Collect croissants', W / 2, cy + 322);
+  ctx.fillText('& burgers', W / 2, cy + 344);
 
   if (hiScore > 0) {
-    ctx.font = '15px "Press Start 2P", monospace';
+    ctx.font = '18px "Press Start 2P", monospace';
     ctx.fillStyle = '#ffd700';
-    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, cy + 375);
+    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, cy + 385);
   }
 }
 
