@@ -7,7 +7,7 @@
 
 <!-- Open Graph / Link Preview -->
 <meta property="og:title" content="Drickle Run — Café Cat Runner">
-<meta property="og:description" content="Help the café cat jump over Drickle coffee cups and collect croissants & burgers! A fun game to play while you wait for your coffee.">
+<meta property="og:description" content="Help the café cat jump over Drickle coffee cups and collect cookies & burgers! A fun game to play while you wait for your coffee.">
 <meta property="og:image" content="https://irahuljadhav.github.io/drickle-run/Drickle%20Run%20banner.png">
 <meta property="og:image:width" content="1408">
 <meta property="og:image:height" content="768">
@@ -91,12 +91,12 @@ const bgImg = loadImg('Drickle Run Cafe Square Background.png');
 const catSheet = loadImg('drickle run cat.png');
 const cupImg = loadImg('Drickle Run Coffee Glass.png');
 const burgerImg = loadImg('Drickle Run Burger.png');
-const croissantImg = loadImg('Drickle Run Croissant.png');
+const cookieImg = loadImg('Drickle Run Cookie.png');
 const tableImg = loadImg('Drickle Run Table.png');
 
 let allLoaded = false;
 let loadCount = 0;
-[bgImg, catSheet, cupImg, burgerImg, croissantImg, tableImg].forEach(img => {
+[bgImg, catSheet, cupImg, burgerImg, cookieImg, tableImg].forEach(img => {
   img.onload = () => { loadCount++; if (loadCount >= 6) allLoaded = true; };
 });
 
@@ -221,12 +221,12 @@ function spawnObstacle() {
 }
 
 function spawnCollectible() {
-  const type = Math.random() < 0.5 ? 'croissant' : 'burger';
+  const type = Math.random() < 0.5 ? 'cookie' : 'burger';
   const minY = groundY - 220;
   const maxY = groundY - 140;
-  // Croissant is wider than tall, burger is roughly square
-  const w = type === 'croissant' ? 55 : 48;
-  const h = type === 'croissant' ? 35 : 42;
+  // Cookie is round, burger is roughly square
+  const w = type === 'cookie' ? 44 : 48;
+  const h = type === 'cookie' ? 44 : 42;
   collectibles.push({
     x: W + 20,
     y: minY + Math.random() * (maxY - minY),
@@ -325,9 +325,9 @@ function update() {
     collectibles[i].x -= gameSpeed;
     if (collectibles[i].x + collectibles[i].w < -20) { collectibles.splice(i, 1); continue; }
     if (hitTest(cat, collectibles[i], 2)) {
-      const pts = collectibles[i].type === 'croissant' ? 15 : 10;
+      const pts = collectibles[i].type === 'cookie' ? 15 : 10;
       score += pts;
-      addParticles(collectibles[i].x + 20, collectibles[i].y + 20, collectibles[i].type === 'croissant' ? '#c08040' : '#f0a030');
+      addParticles(collectibles[i].x + 20, collectibles[i].y + 20, collectibles[i].type === 'cookie' ? '#c08040' : '#f0a030');
       addScorePopup(collectibles[i].x, collectibles[i].y - 10, '+' + pts);
       collectibles.splice(i, 1);
     }
@@ -399,7 +399,7 @@ function drawObstacles() {
 
 function drawCollectibles() {
   for (const col of collectibles) {
-    const img = col.type === 'croissant' ? croissantImg : burgerImg;
+    const img = col.type === 'cookie' ? cookieImg : burgerImg;
     if (!img.complete) continue;
     const floatY = Math.sin(frameCount * 0.08 + col.x * 0.01) * 4;
     ctx.drawImage(img, col.x, col.y + floatY, col.w, col.h);
@@ -525,8 +525,8 @@ function drawMenu() {
   ctx.lineWidth = 3;
   ctx.strokeText('Jump over cups', W / 2, cy + 300);
   ctx.fillText('Jump over cups', W / 2, cy + 300);
-  ctx.strokeText('Collect croissants', W / 2, cy + 322);
-  ctx.fillText('Collect croissants', W / 2, cy + 322);
+  ctx.strokeText('Collect cookies', W / 2, cy + 322);
+  ctx.fillText('Collect cookies', W / 2, cy + 322);
   ctx.strokeText('& burgers', W / 2, cy + 344);
   ctx.fillText('& burgers', W / 2, cy + 344);
 
