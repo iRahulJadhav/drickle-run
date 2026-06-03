@@ -520,9 +520,14 @@ function drawMenu() {
   ctx.fillText('JUMP HIGHER!', W / 2, cy + 265);
 
   ctx.font = '15px "Press Start 2P", monospace';
-  ctx.fillStyle = '#bbb';
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.strokeText('Jump over cups', W / 2, cy + 300);
   ctx.fillText('Jump over cups', W / 2, cy + 300);
+  ctx.strokeText('Collect croissants', W / 2, cy + 322);
   ctx.fillText('Collect croissants', W / 2, cy + 322);
+  ctx.strokeText('& burgers', W / 2, cy + 344);
   ctx.fillText('& burgers', W / 2, cy + 344);
 
   if (hiScore > 0) {
