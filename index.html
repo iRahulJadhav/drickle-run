@@ -21,7 +21,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
-    background: #ffe14d;
+    background: #fefe20;
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -32,8 +32,8 @@
   }
   body {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
   }
   #gameContainer {
     position: relative;
@@ -54,6 +54,7 @@
 <div id="gameContainer">
   <canvas id="game"></canvas>
 </div>
+<img id="bottomBg" src="Bottom Background.png" alt="" style="width:100%;max-width:700px;display:block;margin:0 auto;">
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -96,7 +97,7 @@ const tableImg = loadImg('Drickle Run Table.png');
 // Cat run cycle — 8 individual frames
 const catFrames = [];
 for (let i = 1; i <= 8; i++) {
-  catFrames.push(loadImg('Run Cycle/' + i + '.png'));
+  catFrames.push(loadImg('Run cycle/' + i + '.png'));
 }
 
 let allLoaded = false;
@@ -353,7 +354,7 @@ function drawBackground() {
     // Draw full square image to fill full square canvas — no cropping
     ctx.drawImage(bgImg, 0, 0, bgImg.naturalWidth, bgImg.naturalHeight, 0, 0, W, H);
   } else {
-    ctx.fillStyle = '#ffe14d';
+    ctx.fillStyle = '#fefe20';
     ctx.fillRect(0, 0, W, H);
   }
 }
@@ -584,7 +585,7 @@ function gameLoop() {
   update();
   draw();
   // Match page background to overlay state
-  document.body.style.background = (state === STATE.PLAYING) ? '#ffe14d' : '#6b5a1e';
+  document.body.style.background = (state === STATE.PLAYING) ? '#fefe20' : '#6b5a1e';
   requestAnimationFrame(gameLoop);
 }
 
