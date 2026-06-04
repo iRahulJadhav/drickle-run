@@ -55,7 +55,7 @@
 <div id="gameContainer">
   <canvas id="game"></canvas>
 </div>
-<img id="bottomBg" src="Bottom Background.jpg" alt="" style="width:80vw;max-width:560px;display:block;margin-top:-13%;">
+<img id="bottomBg" src="Bottom Background.jpg" alt="" style="width:80vw;max-width:560px;display:block;margin-top:-13%;position:relative;z-index:1;">
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -466,8 +466,11 @@ function drawHUD() {
 }
 
 function drawMenu() {
+  const livesBottom = tableTopY + tableStripH - 2 + 36;
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, 0, W, livesBottom);
+  ctx.fillStyle = '#fefe20';
+  ctx.fillRect(0, livesBottom, W, H - livesBottom);
 
   ctx.textAlign = 'center';
   ctx.strokeStyle = '#000';
@@ -543,8 +546,11 @@ function drawMenu() {
 }
 
 function drawGameOver() {
+  const livesBottom = tableTopY + tableStripH - 2 + 36;
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, 0, W, livesBottom);
+  ctx.fillStyle = '#fefe20';
+  ctx.fillRect(0, livesBottom, W, H - livesBottom);
 
   const cy = H * 0.4;
   ctx.textAlign = 'center';
