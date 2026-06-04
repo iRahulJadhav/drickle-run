@@ -481,19 +481,12 @@ function drawMenu() {
   ctx.strokeText('RUN', W / 2, cy - 28);
   ctx.fillText('RUN', W / 2, cy - 28);
 
-  ctx.font = '15px "Press Start 2P", monospace';
-  ctx.lineWidth = 3;
-  ctx.fillStyle = '#f0d0a0';
-  ctx.strokeText('A Drickle Coffee', W / 2, cy + 10);
-  ctx.fillText('A Drickle Coffee', W / 2, cy + 10);
-  ctx.strokeText('Shop Game', W / 2, cy + 32);
-  ctx.fillText('Shop Game', W / 2, cy + 32);
 
   if (catSheet.complete) {
     const sw = catSheet.width / 8;
     const sh = catSheet.height;
     const menuFrame = Math.floor(Date.now() / 150) % 8;
-    ctx.drawImage(catSheet, sw * menuFrame, 0, sw, sh, W / 2 - 70, cy + 50, 140, 98);
+    ctx.drawImage(catSheet, sw * menuFrame, 0, sw, sh, W / 2 - 60, cy + 10, 120, 84);
   }
 
   const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
@@ -501,33 +494,50 @@ function drawMenu() {
   ctx.font = '22px "Press Start 2P", monospace';
   ctx.fillStyle = '#fff';
   ctx.lineWidth = 4;
-  ctx.strokeText('TAP TO START', W / 2, cy + 200);
-  ctx.fillText('TAP TO START', W / 2, cy + 200);
+  ctx.strokeText('TAP TO START', W / 2, cy + 120);
+  ctx.fillText('TAP TO START', W / 2, cy + 120);
   ctx.globalAlpha = 1;
 
-  ctx.font = '18px "Press Start 2P", monospace';
+  ctx.font = '14px "Press Start 2P", monospace';
   ctx.fillStyle = '#ffd700';
   ctx.lineWidth = 3;
-  ctx.strokeText('HOLD LONGER =', W / 2, cy + 240);
-  ctx.fillText('HOLD LONGER =', W / 2, cy + 240);
-  ctx.strokeText('JUMP HIGHER!', W / 2, cy + 265);
-  ctx.fillText('JUMP HIGHER!', W / 2, cy + 265);
+  ctx.strokeText('LONG PRESS = JUMP HIGHER!', W / 2, cy + 148);
+  ctx.fillText('LONG PRESS = JUMP HIGHER!', W / 2, cy + 148);
 
-  ctx.font = '15px "Press Start 2P", monospace';
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = '#000';
+  // Game rules — prominent box
+  const boxY = cy + 165;
+  const boxH = 145;
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.strokeStyle = '#ffd700';
   ctx.lineWidth = 3;
-  ctx.strokeText('Jump over cups', W / 2, cy + 300);
-  ctx.fillText('Jump over cups', W / 2, cy + 300);
-  ctx.strokeText('Collect cookies', W / 2, cy + 322);
-  ctx.fillText('Collect cookies', W / 2, cy + 322);
-  ctx.strokeText('& burgers', W / 2, cy + 344);
-  ctx.fillText('& burgers', W / 2, cy + 344);
+  ctx.beginPath();
+  ctx.roundRect(30, boxY, W - 60, boxH, 12);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = '14px "Press Start 2P", monospace';
+  ctx.fillStyle = '#ff6666';
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.strokeText('You lose a life when', W / 2, boxY + 28);
+  ctx.fillText('You lose a life when', W / 2, boxY + 28);
+  ctx.strokeText('you spill a Drickle cup!', W / 2, boxY + 50);
+  ctx.fillText('you spill a Drickle cup!', W / 2, boxY + 50);
+
+  ctx.fillStyle = '#44ff44';
+  ctx.strokeText('Earn extra points by', W / 2, boxY + 82);
+  ctx.fillText('Earn extra points by', W / 2, boxY + 82);
+  ctx.strokeText('collecting Cookies', W / 2, boxY + 104);
+  ctx.fillText('collecting Cookies', W / 2, boxY + 104);
+  ctx.strokeText('& Burgers!', W / 2, boxY + 126);
+  ctx.fillText('& Burgers!', W / 2, boxY + 126);
+
 
   if (hiScore > 0) {
     ctx.font = '18px "Press Start 2P", monospace';
     ctx.fillStyle = '#ffd700';
-    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, cy + 385);
+    ctx.strokeText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, boxY + boxH + 30);
+    ctx.fillText('BEST: ' + String(hiScore).padStart(5, '0'), W / 2, boxY + boxH + 30);
   }
 }
 
