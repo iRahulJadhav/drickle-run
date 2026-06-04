@@ -90,21 +90,16 @@ function loadImg(src) {
 }
 
 const bgImg = loadImg('Drickle Run Cafe Square Background.png');
+const catSheet = loadImg('Run Cycle.png');
 const cupImg = loadImg('Drickle Run Coffee Glass.png');
 const burgerImg = loadImg('Drickle Run Burger.png');
 const cookieImg = loadImg('Drickle Run Cookie.png');
 const tableImg = loadImg('Drickle Run Table.png');
 
-const catFrames = [];
-for (let i = 1; i <= 8; i++) {
-  catFrames.push(loadImg('Run cycle/' + i + '.png'));
-}
-
 let allLoaded = false;
 let loadCount = 0;
-const allImages = [bgImg, cupImg, burgerImg, cookieImg, tableImg, ...catFrames];
-allImages.forEach(img => {
-  img.onload = () => { loadCount++; if (loadCount >= allImages.length) allLoaded = true; };
+[bgImg, catSheet, cupImg, burgerImg, cookieImg, tableImg].forEach(img => {
+  img.onload = () => { loadCount++; if (loadCount >= 6) allLoaded = true; };
 });
 
 const cat = {
@@ -380,12 +375,14 @@ function drawTable() {
 
 function drawCat() {
   if (invincibleTimer > 0 && Math.floor(invincibleTimer / 3) % 2 === 0) return;
+  if (!catSheet.complete) return;
 
-  const frameIdx = cat.jumping ? 0 : cat.frame % 8;
-  const img = catFrames[frameIdx];
-  if (!img || !img.complete) return;
+  const cols = 8;
+  const sw = catSheet.width / cols;
+  const sh = catSheet.height;
+  const frameIdx = cat.jumping ? 5 : cat.frame % 8;
 
-  ctx.drawImage(img, cat.x, cat.y, cat.w, cat.h);
+  ctx.drawImage(catSheet, frameIdx * sw, 0, sw, sh, cat.x, cat.y, cat.w, cat.h);
 }
 
 function drawObstacles() {
@@ -459,9 +456,11 @@ function drawHUD() {
   ctx.strokeText('LIVES:', 15, livesBarY + 24);
   ctx.fillText('LIVES:', 15, livesBarY + 24);
 
-  if (catFrames[0] && catFrames[0].complete) {
+  if (catSheet.complete) {
+    const sw = catSheet.width / 8;
+    const sh = catSheet.height;
     for (let i = 0; i < lives; i++) {
-      ctx.drawImage(catFrames[0], 110 + i * 38, livesBarY + 4, 36, 25);
+      ctx.drawImage(catSheet, 0, 0, sw, sh, 110 + i * 38, livesBarY + 4, 36, 25);
     }
   }
 }
@@ -484,9 +483,11 @@ function drawMenu() {
   ctx.fillText('RUN', W / 2, cy - 28);
 
 
-  const menuFrame = Math.floor(Date.now() / 150) % 8;
-  if (catFrames[menuFrame] && catFrames[menuFrame].complete) {
-    ctx.drawImage(catFrames[menuFrame], W / 2 - 60, cy + 10, 120, 84);
+  if (catSheet.complete) {
+    const sw = catSheet.width / 8;
+    const sh = catSheet.height;
+    const menuFrame = Math.floor(Date.now() / 150) % 8;
+    ctx.drawImage(catSheet, sw * menuFrame, 0, sw, sh, W / 2 - 60, cy + 10, 120, 84);
   }
 
   const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
